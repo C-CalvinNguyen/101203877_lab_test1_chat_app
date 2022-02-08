@@ -83,16 +83,21 @@ io.on('connection', (socket) => {
     socket.on('sendMsg', async (messageData) => {
 
         const dbMsg = new MessageModel()
+        let newDate = new Date()
         dbMsg.from_user = messageData.username
         dbMsg.room = messageData.room
         dbMsg.message = messageData.message
-        dbMsg.date_sent = new Date()
+        dbMsg.date_sent = newDate.toLocaleString('en-US')
         
         await dbMsg.save()
 
-        let clientMsg = `${messageData.username}: ${messageData.message}`
+        let clientMsg = `${newDate.toLocaleTimeString()} - ${messageData.username}: ${messageData.message}`
 
         socket.broadcast.to(messageData.room).emit('newMsg', clientMsg)
+    })
+
+    socket.on('typing', (data) => {
+        socket.broadcast.to(data.room).emit('getTyping', data.status)
     })
 
     socket.on('disconnect', () => {
